@@ -20,5 +20,5 @@ for col in df.columns:
 # Concatenar todos os DataFrames normalizados
 result_df = pd.concat(normalized_dfs, axis=1)
 
-# Salvar o DataFrame normalizado em um novo arquivo CSV
+#Salvar o DataFrame normalizado em um novo arquivo CSV
 result_df.to_csv('arquivo_normalizado.csv', index=False)
