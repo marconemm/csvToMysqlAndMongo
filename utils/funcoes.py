@@ -1,8 +1,9 @@
 import pandas as pd
+from utils import UTF8
 
 
 def trata_data_frame(path: str) -> pd.DataFrame:
-    df = pd.read_csv(path, encoding="utf_8")
+    df = pd.read_csv(path, encoding=UTF8)
 
     # Remove colunas vazias:
     df.drop(
