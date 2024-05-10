@@ -1,0 +1,1 @@
+-- Comandos de manipula do banco de dados:
