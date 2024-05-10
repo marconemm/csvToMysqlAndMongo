@@ -1,6 +1,12 @@
 import pandas as pd
 from utils import UTF8
 
+# Função para capitalizar apenas se o valor for uma string:
+def capitalizar_string(valor):
+    if isinstance(valor, str):
+        return valor.title()
+    
+    return valor
 
 def trata_data_frame(path: str) -> pd.DataFrame:
     """Trata um respectivo data frame, removendo colunas valizas, a coluna "show_id" e preenche as células vazias com "null".
@@ -21,6 +27,10 @@ def trata_data_frame(path: str) -> pd.DataFrame:
     # Remove coluna "show_id":
     if "show_id" in df.columns:
         df.drop("show_id", axis=1, inplace=True)
+
+    # Aplicando a função title() para deixar todas as iniciais maiúsculas:
+    for coluna in df.columns:
+        df[coluna] = df[coluna].apply(capitalizar_string)
 
     # Troca todos as células vazias por "null":
     df = df.fillna("null")
@@ -78,7 +88,7 @@ def cria_sub_dicionario(path: str, fonte: dict) -> dict:
 
     result = {chave: fonte[chave] for chave in chaves_desejadas}
 
-    print(f'\n--\nCriado o sub_dict, conforme os títulos do CSV: "{path}"\n')
+    print(f'\n--\nCriado um Dicionário, conforme os títulos do CSV: "{path}"\n')
     print(result)
     print("\n--")
 
