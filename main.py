@@ -1,24 +1,18 @@
-import pandas as pd
+from utils.funcoes import trata_data_frame, salva_valores_unicos, cria_sub_dicionario
 
-# Carregar o arquivo CSV para um DataFrame
-df = pd.read_csv('netflix_titles.csv', encoding='latin1')
+df = trata_data_frame("database/teste_data.csv")
+# df = trata_data_frame("database/netflix_titles.csv")
+COLUNAS_DICT = {}
 
-# Lista para armazenar os DataFrames normalizados
-normalized_dfs = []
+# Obém todos valores únicos de cada coluna:
+salva_valores_unicos(df, save_in=COLUNAS_DICT, excecao=("date_added", "description"))
 
-# Normalizar colunas com mais de um valor por linha
-for col in df.columns:
-    # Converter a coluna para o tipo string
-    df[col] = df[col].astype(str)
-    # Dividir a coluna em várias colunas
-    split_cols = df[col].str.split(',').apply(pd.Series)
-    # Renomear as novas colunas
-    split_cols = split_cols.rename(columns=lambda x: f'{col}_{x}')
-    # Adicionar os novos DataFrames à lista
-    normalized_dfs.append(split_cols)
+# Cria os sub dicionários, conforme arquivos CSV separados manualmente:
+dict_show = cria_sub_dicionario("database/normalizado/show.csv", COLUNAS_DICT)
+dict_type = cria_sub_dicionario("database/normalizado/type.csv", COLUNAS_DICT)
+dict_diretor = cria_sub_dicionario("database/normalizado/diretor.csv", COLUNAS_DICT)
+dict_rating = cria_sub_dicionario("database/normalizado/rating.csv", COLUNAS_DICT)
+dict_cast = cria_sub_dicionario("database/colocar_na_1FN/cast.csv", COLUNAS_DICT)
+dict_country = cria_sub_dicionario("database/colocar_na_1FN/country.csv", COLUNAS_DICT)
+dict_listed_in = cria_sub_dicionario("database/colocar_na_1FN/listed_in.csv", COLUNAS_DICT)
 
-# Concatenar todos os DataFrames normalizados
-result_df = pd.concat(normalized_dfs, axis=1)
-
-#Salvar o DataFrame normalizado em um novo arquivo CSV
-result_df.to_csv('arquivo_normalizado.csv', index=False)
