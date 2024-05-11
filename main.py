@@ -1,18 +1,19 @@
 from utils.funcoes import trata_data_frame, salva_valores_unicos
-from utils.my_sql import executar_script_sql
+from utils.my_sql import insert_uniques_into_db
+from utils import EXCECAO_VALORES_UNICOS, EXCECAO_INICIAIS_MAIUSCULAS
 
-df = trata_data_frame("database/teste_data.csv")
-#df = trata_data_frame("database/netflix_titles.csv")
-COLUNAS_DICT = {}
+df = trata_data_frame("database/teste_data.csv", EXCECAO_INICIAIS_MAIUSCULAS)
+# df = trata_data_frame("database/netflix_titles.csv")
+PATHS_TUPLE = (
+    "normalizado/type.csv",
+    "normalizado/rating.csv",
+    "normalizado/director.csv",
+    "colocar_na_1FN/cast.csv",
+    "colocar_na_1FN/country.csv",
+    "colocar_na_1FN/listed_in.csv",
+    "normalizado/show.csv",
+)
 
-# Obém todos valores únicos de cada coluna:
-salva_valores_unicos(df, save_in=COLUNAS_DICT, excecao=("date_added", "description"))
+COLUNAS_DICT = salva_valores_unicos(df, excecao=EXCECAO_VALORES_UNICOS)
 
-# Insere os dados punicos em todas as tabelas in de coluna única:
-executar_script_sql("database/normalizado/type.csv", COLUNAS_DICT)
-executar_script_sql("database/normalizado/rating.csv", COLUNAS_DICT)
-executar_script_sql("database/normalizado/director.csv", COLUNAS_DICT)
-executar_script_sql("database/colocar_na_1FN/cast.csv", COLUNAS_DICT)
-executar_script_sql("database/colocar_na_1FN/country.csv", COLUNAS_DICT)
-executar_script_sql("database/colocar_na_1FN/listed_in.csv", COLUNAS_DICT)
-# executar_script_sql("database/normalizado/show.csv", COLUNAS_DICT)
+insert_uniques_into_db(PATHS_TUPLE, COLUNAS_DICT)

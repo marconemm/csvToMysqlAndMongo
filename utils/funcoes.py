@@ -1,18 +1,29 @@
 import pandas as pd
 from utils import UTF8
+import csv
+from datetime import datetime
 
-# Função para capitalizar apenas se o valor for uma string:
-def capitalizar_string(valor):
+
+def capitalizar_string(valor: any) -> any:
+    """Deixa todas as iniciais de valores tipo texto em maiúscula.
+    Args:
+        valor (any): o valor que será tratado.
+
+    Returns:
+        any: valor tratado, caso seja do tipo texto.
+    """
     if isinstance(valor, str):
         return valor.title()
-    
+
     return valor
 
-def trata_data_frame(path: str) -> pd.DataFrame:
+
+def trata_data_frame(path: str, excecao: tuple = ()) -> pd.DataFrame:
     """Trata um respectivo data frame, removendo colunas valizas, a coluna "show_id" e preenche as células vazias com "null".
 
     Args:
         path (str): Caminho relativo para o CSV que será analizado.
+        excecao (tuple, optional): uma coleção com as colunas que não receberão as iniciais maiúsculas. Padrão: ().
 
     Returns:
         pd.DataFrame: Data frame tratado.
@@ -30,7 +41,8 @@ def trata_data_frame(path: str) -> pd.DataFrame:
 
     # Aplicando a função title() para deixar todas as iniciais maiúsculas:
     for coluna in df.columns:
-        df[coluna] = df[coluna].apply(capitalizar_string)
+        if coluna not in excecao:
+            df[coluna] = df[coluna].apply(capitalizar_string)
 
     # Troca todos as células vazias por "null":
     df = df.fillna("null")
@@ -38,14 +50,18 @@ def trata_data_frame(path: str) -> pd.DataFrame:
     return df
 
 
-def salva_valores_unicos(df: pd.DataFrame, save_in: dict, excecao: tuple) -> None:
-    """Salva os valores únicos de cada coluna analizada.
+def salva_valores_unicos(df: pd.DataFrame, excecao: tuple = ()) -> dict:
+    """Retorna os valores únicos de cada coluna analizada.
 
     Args:
-        df (pd.DataFrame): Dataframe que será analizado.
-        save_in (dict): Variável na qual os dados únicos serão registrados.
-        excecao (tuple): Uma coleção com os nomes das colunas que estão multi-valoradas. 
+        df (pd.DataFrame): dataframe que será analizado.
+        excecao (tuple, optional): uma coleção com os nomes das colunas que estão multi-valoradas. Padrão: ().
+
+    Returns:
+        dict: dicionário com os respectivos valores unicos do dataframe analizado.
     """
+    result = {}
+
     for coluna in df.columns:  # Descobre os valores únicos de cada coluna:
         print(f'Analizando a coluna "{coluna}"...\n')
         unicos_set = set({})
@@ -53,7 +69,9 @@ def salva_valores_unicos(df: pd.DataFrame, save_in: dict, excecao: tuple) -> Non
 
         for (
             valor_unico
-        ) in valores_unicos:  # Analiza de cada um dos valores únicos está multivalorado:
+        ) in (
+            valores_unicos
+        ):  # Analiza de cada um dos valores únicos está multivalorado:
             if valor_unico == "null":
                 continue
 
@@ -69,9 +87,11 @@ def salva_valores_unicos(df: pd.DataFrame, save_in: dict, excecao: tuple) -> Non
             else:
                 unicos_set.add(valor_unico)
 
-        save_in[coluna] = unicos_set
+        result[coluna] = unicos_set
 
     print("Valores únicos obtidos com sucesso.\n")
+
+    return result
 
 
 def cria_sub_dicionario(path: str, fonte: dict) -> dict:
@@ -93,3 +113,39 @@ def cria_sub_dicionario(path: str, fonte: dict) -> dict:
     print("\n--")
 
     return result
+
+
+def read_csv_to_dict(csv_file: str, excecao: tuple = ()) -> dict:
+    """Ler um CSV e retorna seus valores em um dicionário.
+
+    Args:
+        csv_file (str): caminho relativo para o *.csv
+        excecao (tuple, optional): tupla com os valores de colunas que não receberão formatação de dados. Padrão: ().
+
+    Returns:
+        dict: dicionário contendo todas as linhas do *.csv
+    """
+    data_dict = {}
+
+    with open(csv_file, "r", encoding="utf-8") as file:
+        csv_reader = csv.DictReader(file)
+
+        for i, row in enumerate(csv_reader):
+            data_dict[i + 1] = {}
+
+            for key, value in row.items():
+                if key not in excecao:
+                    data_dict[i + 1].update({key: value.title().strip()})
+
+                elif key == "release_year":
+                    data_dict[i + 1].update({key: int(value)})
+
+                elif key == "date_added":
+                    data_dict[i + 1].update(
+                        {key: datetime.strptime(value, "%B %d, %Y")}
+                    )
+
+                else:
+                    data_dict[i + 1].update({key: value.strip()})
+
+    return data_dict
