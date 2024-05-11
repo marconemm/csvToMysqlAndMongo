@@ -1,4 +1,13 @@
 UTF8 = "utf_8"
-EXCECAO_SHOW_CSV = ("release_year", "date_added", "duration")
-EXCECAO_VALORES_UNICOS = ("date_added", "description")
-EXCECAO_INICIAIS_MAIUSCULAS = ("rating", "duration", "description")
+EXCEPT_FILL_DB_BY_CSV = ("release_year", "date_added", "duration")
+EXCEPT_UNIQUE_VALUES = ("date_added", "description")
+EXCEPT_CAPITAL_INITIALS = ("rating", "duration", "description")
+SHOW_TBL_COLUMNS = (
+    "title",
+    "date_added",
+    "release_year",
+    "duration",
+    "description",
+    "type",
+    "rating_id",
+)

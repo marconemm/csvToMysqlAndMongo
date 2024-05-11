@@ -59,8 +59,8 @@ def trata_data_frame(path: str, excecao: tuple = ()) -> pd.DataFrame:
 
     for coluna in df.columns:
         # formatando dados textuais:
-        #df[coluna] = df[coluna].apply(remover_acentos)
-        
+        # df[coluna] = df[coluna].apply(remover_acentos)
+
         if coluna not in excecao:
             df[coluna] = df[coluna].apply(iniciais_maiusculas)
 
@@ -154,18 +154,21 @@ def read_csv_to_dict(csv_file: str, excecao: tuple = ()) -> dict:
             data_dict[i + 1] = {}
 
             for key, value in row.items():
-                if key not in excecao:
-                    data_dict[i + 1].update({key: value.title().strip()})
+                if value:
+                    if key not in excecao:
+                        data_dict[i + 1].update({key: value.title().strip()})
 
-                elif key == "release_year":
-                    data_dict[i + 1].update({key: int(value)})
+                    elif key == "release_year":
+                        data_dict[i + 1].update({key: int(value)})
 
-                elif key == "date_added":
-                    data_dict[i + 1].update(
-                        {key: datetime.strptime(value, "%B %d, %Y")}
-                    )
+                    elif key == "date_added":
+                        data_dict[i + 1].update(
+                            {key: datetime.strptime(value, "%B %d, %Y")}
+                        )
 
+                    else:
+                        data_dict[i + 1].update({key: value.strip()})
                 else:
-                    data_dict[i + 1].update({key: value.strip()})
+                    data_dict[i + 1].update({key: None})
 
     return data_dict
