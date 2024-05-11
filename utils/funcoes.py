@@ -1,10 +1,9 @@
-import pandas as pd
+import csv, unicodedata, pandas as pd
 from utils import UTF8
-import csv
 from datetime import datetime
 
 
-def capitalizar_string(valor: any) -> any:
+def iniciais_maiusculas(valor: any) -> any:
     """Deixa todas as iniciais de valores tipo texto em maiúscula.
     Args:
         valor (any): o valor que será tratado.
@@ -14,6 +13,25 @@ def capitalizar_string(valor: any) -> any:
     """
     if isinstance(valor, str):
         return valor.title()
+
+    return valor
+
+
+def remover_acentos(valor: any) -> any:
+    """Remove a acentuação do texto.
+
+    Args:
+        valor (any): texto que será tratado
+
+    Returns:
+        any: texto sem a acentuação
+    """
+    if isinstance(valor, str):
+        return "".join(
+            letra
+            for letra in unicodedata.normalize("NFD", valor)
+            if unicodedata.category(letra) != "Mn"
+        )
 
     return valor
 
@@ -39,10 +57,12 @@ def trata_data_frame(path: str, excecao: tuple = ()) -> pd.DataFrame:
     if "show_id" in df.columns:
         df.drop("show_id", axis=1, inplace=True)
 
-    # Aplicando a função title() para deixar todas as iniciais maiúsculas:
     for coluna in df.columns:
+        # formatando dados textuais:
+        #df[coluna] = df[coluna].apply(remover_acentos)
+        
         if coluna not in excecao:
-            df[coluna] = df[coluna].apply(capitalizar_string)
+            df[coluna] = df[coluna].apply(iniciais_maiusculas)
 
     # Troca todos as células vazias por "null":
     df = df.fillna("null")

@@ -1,5 +1,5 @@
 DROP DATABASE `projeto_database_db`;
-CREATE DATABASE IF NOT EXISTS `projeto_database_db` DEFAULT CHARACTER SET utf8mb4;
+CREATE DATABASE IF NOT EXISTS `projeto_database_db` DEFAULT CHARACTER SET utf8mb4 COLLATE 'utf8mb4_general_ci';
 -- ****
 -- Seguir a seguinte ordem de criação das tabelas:
 -- 1-) Criar tabela type_tbl:
@@ -47,17 +47,15 @@ ENGINE = InnoDB;
 -- 4-) Criar tabela diretor_tbl:
 CREATE TABLE IF NOT EXISTS `projeto_database_db`.`director_tbl` (
   `id` INT NOT NULL AUTO_INCREMENT,
-  `director` VARCHAR(100) NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE INDEX `nome_UNIQUE` (`director` ASC) VISIBLE)
+  `director` VARCHAR(100) CHARACTER SET 'utf8mb4' COLLATE 'utf8mb4_general_ci' NOT NULL,
+  PRIMARY KEY (`id`))
 ENGINE = InnoDB;
 -- 5-) Criar tabela cast_tbl:
 CREATE TABLE IF NOT EXISTS `projeto_database_db`.`cast_tbl` (
   `id` INT NOT NULL AUTO_INCREMENT,
-  `cast` VARCHAR(100) NOT NULL,
+  `cast` VARCHAR(100) CHARACTER SET 'utf8mb4' COLLATE 'utf8mb4_general_ci' NOT NULL,
   PRIMARY KEY (`id`),
-  UNIQUE INDEX `id_UNIQUE` (`id` ASC) VISIBLE,
-  UNIQUE INDEX `name_UNIQUE` (`cast` ASC) VISIBLE)
+  UNIQUE INDEX `id_UNIQUE` (`id` ASC) VISIBLE)
 ENGINE = InnoDB;
 -- 6-) Criar tabela country_tbl:
 CREATE TABLE IF NOT EXISTS `projeto_database_db`.`country_tbl` (
