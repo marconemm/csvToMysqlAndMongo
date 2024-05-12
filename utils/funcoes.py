@@ -12,6 +12,8 @@ def iniciais_maiusculas(valor: any) -> any:
         any: valor tratado, caso seja do tipo texto.
     """
     if isinstance(valor, str):
+        valor = valor.lower()
+        
         return valor.title()
 
     return valor
@@ -59,7 +61,7 @@ def trata_data_frame(path: str, excecao: tuple = ()) -> pd.DataFrame:
 
     for coluna in df.columns:
         # formatando dados textuais:
-        # df[coluna] = df[coluna].apply(remover_acentos)
+        df[coluna] = df[coluna].apply(remover_acentos)
 
         if coluna not in excecao:
             df[coluna] = df[coluna].apply(iniciais_maiusculas)
@@ -162,6 +164,7 @@ def read_csv_to_dict(csv_file: str, excecao: tuple = ()) -> dict:
                         data_dict[i + 1].update({key: int(value)})
 
                     elif key == "date_added":
+                        value = str(value).strip()
                         data_dict[i + 1].update(
                             {key: datetime.strptime(value, "%B %d, %Y")}
                         )

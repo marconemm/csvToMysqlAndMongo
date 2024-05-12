@@ -4,7 +4,7 @@ from mysql.connector.pooling import PooledMySQLConnection
 from mysql.connector.abstracts import MySQLConnectionAbstract
 from dotenv import load_dotenv
 from utils.funcoes import cria_sub_dicionario, read_csv_to_dict
-from utils import EXCEPT_FILL_DB_BY_CSV
+from utils import EXCEPT_FILL_DB_BY_CSV, JOIN_TABLES
 
 
 def conect_to_db() -> PooledMySQLConnection | MySQLConnectionAbstract:
@@ -56,7 +56,7 @@ def cria_script_sql(fonte: dict, nome_tabela: str) -> str:
     return script
 
 
-def insert_unique_into_db(path: str, fonte: dict) -> None:
+def insert_into_source_tbl(path: str, fonte: dict) -> None:
     """Executar um script no banco de dados.
 
     Args:
@@ -107,12 +107,12 @@ def insert_unique_into_db(path: str, fonte: dict) -> None:
                 conn.commit()
 
 
-def insert_uniques_into_db(csv_paths_tuple: tuple, data: dict) -> None:
+def insert_into_sources_tbl_by_csv(csv_paths_tuple: tuple, data: dict) -> None:
     """Insere os dados únicos em todas as tabelas de coluna única."""
     for csv_path in csv_paths_tuple:
         csv_path = f"database/{csv_path}"
 
-        insert_unique_into_db(csv_path, data)
+        insert_into_source_tbl(csv_path, data)
 
 
 def find_id(query: str, value: str) -> int | None:
@@ -136,6 +136,10 @@ def find_id(query: str, value: str) -> int | None:
                 cursor.execute(query, value)
                 response = cursor.fetchone()
 
+                # Iterar sobre os resultados restantes e descartá-los
+                for _ in cursor:
+                    pass
+
             if response:
                 return int(response["id"])
 
@@ -145,13 +149,13 @@ def find_id(query: str, value: str) -> int | None:
         raise RuntimeError("Erro ao buscar o ID:", msce)
 
 
-def insert_into_show_tbl(csv_path: str) -> None:
+def insert_into_show_tbl_by_csv(csv_path: str) -> None:
     data = read_csv_to_dict(csv_path, EXCEPT_FILL_DB_BY_CSV)
 
     with conect_to_db() as conn:
         with conn.cursor() as cursor:
             for row in data.values():
-                INSERT_QUERY = "INSERT INTO `show_tbl` (title, date_added, release_year, duration, description, type_id, rating_id) VALUES (%s, %s, %s, %s, %s, %s, %s)"
+                INSERT_QUERY = "INSERT INTO `show_tbl` (title, date_added, release_year, duration, description, type_id, rating_id) VALUES (%s, %s, %s, %s, %s, %s, %s);"
 
                 try:
                     TYPE_ID = find_id(
@@ -180,3 +184,72 @@ def insert_into_show_tbl(csv_path: str) -> None:
                     raise RuntimeError("Erro ao buscar o ID:", msce)
 
             conn.commit()
+
+
+def insert_into_join_table(conn, column, value, join_tbl, id_source_tbl, show_id):
+    with conn.cursor() as cursor:
+        try:
+            SOURCE_TABLE = f"{column}_tbl"
+            select_query = f"SELECT id FROM `{SOURCE_TABLE}` WHERE `{column}` = %s;"
+            SOURCE_ID = find_id(select_query, value)
+            
+            if not SOURCE_ID:
+                return
+
+            INSERT_QUERY = (
+                f"INSERT INTO `{join_tbl}` (id_show, {id_source_tbl}) VALUES (%s, %s);"
+            )
+
+            cursor.execute(INSERT_QUERY, (show_id, SOURCE_ID))
+
+            print(f'Dado inserido com sucesso na tabela "{join_tbl}"!\n')
+
+        except mysql.connector.Error as msce:
+            raise RuntimeError("Erro ao buscar o ID:", msce)
+
+
+def insert_into_N_N_tbl_by_csv(csv_path: str) -> None:
+    data = read_csv_to_dict(csv_path, EXCEPT_FILL_DB_BY_CSV)
+
+    with conect_to_db() as conn:
+        for row in data.values():
+            select_query = "SELECT id FROM `show_tbl` WHERE `title` = %s;"
+            SHOW_ID = find_id(select_query, row["title"])
+
+            for column in row:
+                if column not in JOIN_TABLES:
+                    continue
+
+                JOIN_TBL = f"show_{column}_tbl"
+                ID_SOURCE_TBL = f"id_{column}"
+                values = [row[column]]
+
+                if values[0] and ("," in values[0]):
+                    values[0] = tuple(value.strip() for value in values[0].split(","))
+
+                if values[0]:
+                    # Case "not None" value in values[0]":
+                    for value in values:
+                        if isinstance(value, tuple):
+                            # In case of a multivalored value:
+                            values = value
+                            for value in values:
+                                insert_into_join_table(
+                                    conn,
+                                    column,
+                                    value,
+                                    JOIN_TBL,
+                                    ID_SOURCE_TBL,
+                                    SHOW_ID,
+                                )
+                        else:
+                            # In case of a unique value:
+                            insert_into_join_table(
+                                conn,
+                                column,
+                                value,
+                                JOIN_TBL,
+                                ID_SOURCE_TBL,
+                                SHOW_ID,
+                            )
+        conn.commit()

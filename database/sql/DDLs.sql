@@ -127,15 +127,15 @@ ENGINE = InnoDB;
 -- 11-) Criar tabela show_listed_in_tbl:
 CREATE TABLE IF NOT EXISTS `projeto_database_db`.`show_listed_in_tbl` (
   `id_show` INT NOT NULL,
-  `id_listedin` INT NOT NULL,
-  INDEX `fk_listedin_id_idx` (`id_listedin` ASC) VISIBLE,
+  `id_listed_in` INT NOT NULL,
+  INDEX `fk_listedin_id_idx` (`id_listed_in` ASC) VISIBLE,
   INDEX `fk_show_id_idx` (`id_show` ASC) VISIBLE,
-  CONSTRAINT `fk_listedin_id`
-    FOREIGN KEY (`id_listedin`)
+  CONSTRAINT `fk_listed_in_id`
+    FOREIGN KEY (`id_listed_in`)
     REFERENCES `projeto_database_db`.`listed_in_tbl` (`id`)
     ON DELETE CASCADE
     ON UPDATE CASCADE,
-  CONSTRAINT `fk_show_listedin_id`
+  CONSTRAINT `fk_show_listed_in_id`
     FOREIGN KEY (`id_show`)
     REFERENCES `projeto_database_db`.`show_tbl` (`id`)
     ON DELETE CASCADE
