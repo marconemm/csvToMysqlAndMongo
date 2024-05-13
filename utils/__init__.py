@@ -13,4 +13,4 @@ SHOW_TBL_COLUMNS = (
     "type",
     "rating_id",
 )
-JOIN_TABLES = ("director", "cast", "country", "listed_in")
+SOURECES_TABLES = ("director", "cast", "country", "listed_in")

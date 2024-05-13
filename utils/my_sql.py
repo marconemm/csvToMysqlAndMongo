@@ -1,10 +1,9 @@
 import mysql.connector
-import os
 from mysql.connector.pooling import PooledMySQLConnection
 from mysql.connector.abstracts import MySQLConnectionAbstract
-from dotenv import load_dotenv
 from utils.funcoes import cria_sub_dicionario, read_csv_to_dict
-from utils import EXCEPT_FILL_DB_BY_CSV, JOIN_TABLES
+from utils import EXCEPT_FILL_DB_BY_CSV, SOURECES_TABLES
+from models.Show import Show
 
 
 def conect_to_db() -> PooledMySQLConnection | MySQLConnectionAbstract:
@@ -13,6 +12,9 @@ def conect_to_db() -> PooledMySQLConnection | MySQLConnectionAbstract:
     Returns:
         PooledMySQLConnection | MySQLConnectionAbstract: instancia da conexão com o banco de dados.
     """
+    import os
+    from dotenv import load_dotenv
+
     load_dotenv()
 
     return mysql.connector.connect(
@@ -149,6 +151,44 @@ def find_id(query: str, value: str) -> int | None:
         raise RuntimeError("Erro ao buscar o ID:", msce)
 
 
+def select_show_by_id(id: int) -> Show:
+    show = Show()
+    VALUES = tuple([id])
+
+    try:
+        with conect_to_db() as conn:
+            with conn.cursor(dictionary=True) as cursor:
+                query = """SELECT s.id, s.title, s.release_year, s.date_added, s.description, s.duration, t.type, r.rating FROM projeto_database_db.show_tbl AS s INNER JOIN projeto_database_db.type_tbl AS t ON s.type_id = t.id INNER JOIN projeto_database_db.rating_tbl AS r ON s.rating_id = r.id WHERE s.id = %s;"""
+                cursor.execute(query, VALUES)
+                response = cursor.fetchall()
+
+                if response:
+                    show.set_show_attr(response)
+
+                    query = """SELECT d.director FROM projeto_database_db.show_tbl AS s INNER JOIN projeto_database_db.show_director_tbl AS sd ON s.id = sd.id_show INNER JOIN projeto_database_db.director_tbl AS d ON sd.id_director = d.id WHERE s.id = %s;"""
+                    cursor.execute(query, VALUES)
+                    show.set_director_list(cursor.fetchall())
+
+                    query = """SELECT c.country FROM projeto_database_db.show_tbl AS s INNER JOIN projeto_database_db.show_country_tbl AS sc ON s.id = sc.id_show INNER JOIN projeto_database_db.country_tbl AS c ON c.id = sc.id_country WHERE s.id = %s;"""
+                    cursor.execute(query, VALUES)
+                    show.set_country_list(cursor.fetchall())
+
+                    query = """SELECT li.listed_in FROM projeto_database_db.show_tbl AS s INNER JOIN projeto_database_db.show_listed_in_tbl AS sli ON sli.id_show = s.id INNER JOIN projeto_database_db.listed_in_tbl AS li ON li.id = sli.id_listed_in WHERE s.id = %s;"""
+                    cursor.execute(query, VALUES)
+                    show.set_listed_in_list(cursor.fetchall())
+
+                    query = """SELECT c.cast FROM projeto_database_db.show_tbl AS s INNER JOIN projeto_database_db.show_cast_tbl AS sc ON sc.id_show = s.id INNER JOIN projeto_database_db.cast_tbl AS c ON c.id = sc.id_cast WHERE s.id = %s;"""
+                    cursor.execute(query, VALUES)
+                    show.set_country_list(cursor.fetchall())
+
+                    return show
+
+                return None
+
+    except mysql.connector.Error as msce:
+        raise RuntimeError("Erro ao buscar o ID:", msce)
+
+
 def insert_into_show_tbl_by_csv(csv_path: str) -> None:
     data = read_csv_to_dict(csv_path, EXCEPT_FILL_DB_BY_CSV)
 
@@ -192,7 +232,7 @@ def insert_into_join_table(conn, column, value, join_tbl, id_source_tbl, show_id
             SOURCE_TABLE = f"{column}_tbl"
             select_query = f"SELECT id FROM `{SOURCE_TABLE}` WHERE `{column}` = %s;"
             SOURCE_ID = find_id(select_query, value)
-            
+
             if not SOURCE_ID:
                 return
 
@@ -217,7 +257,7 @@ def insert_into_N_N_tbl_by_csv(csv_path: str) -> None:
             SHOW_ID = find_id(select_query, row["title"])
 
             for column in row:
-                if column not in JOIN_TABLES:
+                if column not in SOURECES_TABLES:
                     continue
 
                 JOIN_TBL = f"show_{column}_tbl"
