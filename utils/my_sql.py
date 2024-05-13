@@ -151,7 +151,7 @@ def find_id(query: str, value: str) -> int | None:
         raise RuntimeError("Erro ao buscar o ID:", msce)
 
 
-def select_show_by_id(id: int) -> Show:
+def mysql_select_show_by_id(id: int) -> Show:
     show = Show()
     VALUES = tuple([id])
 

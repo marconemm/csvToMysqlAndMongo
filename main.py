@@ -1,30 +1,9 @@
-import time
-from utils.funcoes import trata_data_frame, salva_valores_unicos
-from utils.my_sql import (
-    insert_into_sources_tbl_by_csv,
-    insert_into_show_tbl_by_csv,
-    insert_into_N_N_tbl_by_csv,
-)
-from utils import CSV_PATH, EXCEPT_UNIQUE_VALUES, EXCEPT_CAPITAL_INITIALS
+from utils.my_sql import mysql_select_show_by_id
+from utils.mongo_db import mongo_insert_show_into_db_by_id
 
-inicio = time.time()
-PATHS_TUPLE = (
-    "normalizado/type.csv",
-    "normalizado/rating.csv",
-    "normalizado/director.csv",
-    "colocar_na_1FN/cast.csv",
-    "colocar_na_1FN/country.csv",
-    "colocar_na_1FN/listed_in.csv",
-)
+def find_in_mysql_and_insert_into_mongo_by_id(id:int) -> None:
+    mysql_select_show_by_id(id)
+    mongo_insert_show_into_db_by_id(id)
+    
 
-df = trata_data_frame(CSV_PATH, EXCEPT_CAPITAL_INITIALS)
-COLUNAS_DICT = salva_valores_unicos(df, excecao=EXCEPT_UNIQUE_VALUES)
-
-insert_into_sources_tbl_by_csv(PATHS_TUPLE, COLUNAS_DICT)
-insert_into_show_tbl_by_csv(CSV_PATH)
-insert_into_N_N_tbl_by_csv(CSV_PATH)
-
-fim = time.time()
-
-print("\n\n--\nTodos os dados foram inseridos no banco de dados!")
-print("Tempo de execução:", fim - inicio, "segundos")
+find_in_mysql_and_insert_into_mongo_by_id(2)
