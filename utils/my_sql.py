@@ -179,7 +179,7 @@ def mysql_select_show_by_id(id: int) -> Show:
 
                     query = """SELECT c.cast FROM projeto_database_db.show_tbl AS s INNER JOIN projeto_database_db.show_cast_tbl AS sc ON sc.id_show = s.id INNER JOIN projeto_database_db.cast_tbl AS c ON c.id = sc.id_cast WHERE s.id = %s;"""
                     cursor.execute(query, VALUES)
-                    show.set_country_list(cursor.fetchall())
+                    show.set_cast_list(cursor.fetchall())
 
                     return show
 
